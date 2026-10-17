@@ -7,6 +7,25 @@ Fiscus is a personal accounting app for a small Canadian business (CRA T2125 sty
 
 It tracks incomes, expenses, car expenses, house expenses, travel logs and miscellaneous files, and can produce Excel reports.
 
+## Table of contents
+
+- [Purpose](#purpose)
+- [Origin](#origin)
+- [Why it is built this way](#why-it-is-built-this-way)
+- [Prerequisites](#prerequisites)
+- [Deploy](#deploy)
+- [Update](#update)
+- [API keys](#api-keys)
+- [Mobile app](#mobile-app)
+- [Removing a stack](#removing-a-stack)
+- [Recommended account hygiene](#recommended-account-hygiene)
+- [Development](#development)
+  - [Adding or changing an endpoint](#adding-or-changing-an-endpoint)
+  - [Code layout](#code-layout)
+  - [Data model](#data-model)
+  - [Error convention](#error-convention)
+- [License](#license)
+
 ## Purpose
 
 I built Fiscus to push AWS Lambda as far as I could, and to automate as much of its upkeep as possible. The whole backend runs on Lambda, API Gateway, DynamoDB and S3. Nothing is configured by hand in the console: the API and the infrastructure are generated from a single `routes.yaml` (OpenAPI, functions, permissions and IAM policies), so adding an endpoint means editing one file and running one script. Every commit is checked by a git hook (lint, template validation, tests with mocked AWS), and a deploy is `sam build && sam deploy`.
