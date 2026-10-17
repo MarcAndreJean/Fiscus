@@ -1,5 +1,12 @@
 # Fiscus
 
+<p align="center">
+  <img src="screenshots/screenshot_home.webp" alt="Home screen" width="23%">
+  <img src="screenshots/Screenshot_expenses.webp" alt="Expenses list" width="23%">
+  <img src="screenshots/Screenshot_viewer.webp" alt="Record viewer" width="23%">
+  <img src="screenshots/Screenshot_reports.webp" alt="Reports" width="23%">
+</p>
+
 Fiscus is a personal accounting app for a small Canadian business (CRA T2125 style categories). It has two parts:
 
 - a **serverless backend** on AWS: Python Lambda functions behind an API Gateway REST API (API-key protected), storing records in DynamoDB and files in S3, defined as code with AWS SAM (`template.yaml` and `openapi.yaml`, generated from `api/`);
