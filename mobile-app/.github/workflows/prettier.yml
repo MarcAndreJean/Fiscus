@@ -1,0 +1,35 @@
+name: Prettier
+
+on:
+  push:
+    branches: ['main']
+  pull_request:
+    # The branches below must be a subset of the branches above
+    branches: ['main']
+
+defaults:
+  run:
+    working-directory: mobile-app
+
+jobs:
+  prettier:
+    name: Run Prettier check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: mobile-app/.nvmrc
+          cache: yarn
+          cache-dependency-path: mobile-app/yarn.lock
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run Prettier check
+        run: yarn format:check

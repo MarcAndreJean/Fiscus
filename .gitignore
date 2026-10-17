@@ -1,0 +1,13 @@
+.aws-sam/
+samconfig.toml
+build/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.venv/
+.env
+.superpowers/
+docs/superpowers/
+.claude/

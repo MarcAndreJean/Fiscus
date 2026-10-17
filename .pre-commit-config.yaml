@@ -1,0 +1,61 @@
+# Git hooks for the whole repo. Install once with:  pre-commit install
+# Hooks run the tools pinned in requirements-dev.txt (language: system), so a hook run
+# and a manual run give the same result. Tools are started through `python` so they work
+# even when Python's Scripts folder is not on the PATH git uses.
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff check
+        entry: python -m ruff check --fix
+        language: system
+        types: [python]
+      - id: ruff-format
+        name: ruff format
+        entry: python -m ruff format
+        language: system
+        types: [python]
+      - id: gen-api
+        name: openapi.yaml and template.yaml are generated from api/
+        entry: python scripts/gen_api.py --check
+        language: system
+        files: ^(api/|scripts/gen_api\.py$|(template|openapi)\.yaml$)
+        pass_filenames: false
+      - id: cfn-lint
+        name: cfn-lint
+        entry: python -c "import sys; from cfnlint.runner import main; sys.exit(main())" template.yaml
+        language: system
+        files: ^template\.yaml$
+        pass_filenames: false
+      - id: pytest
+        name: pytest
+        entry: python -m pytest -q
+        language: system
+        files: ^(api|lambda|layers|scripts|tests)/|^(template|openapi)\.yaml$|^pytest\.ini$
+        pass_filenames: false
+
+      # Mobile app: the package.json scripts, run on the whole app when any of its files change.
+      - id: mobile-prettier
+        name: mobile prettier
+        entry: npm --prefix mobile-app run -s format:check
+        language: system
+        files: ^mobile-app/
+        pass_filenames: false
+      - id: mobile-eslint
+        name: mobile eslint
+        entry: npm --prefix mobile-app run -s lint
+        language: system
+        files: ^mobile-app/.*\.(js|jsx|ts|tsx)$
+        pass_filenames: false
+      - id: mobile-typecheck
+        name: mobile typecheck
+        entry: npm --prefix mobile-app run -s typecheck
+        language: system
+        files: ^mobile-app/.*\.(ts|tsx)$
+        pass_filenames: false
+      - id: mobile-test
+        name: mobile test
+        entry: npm --prefix mobile-app run -s test -- --ci
+        language: system
+        files: ^mobile-app/.*\.(js|jsx|ts|tsx)$
+        pass_filenames: false

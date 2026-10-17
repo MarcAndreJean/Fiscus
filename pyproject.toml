@@ -1,0 +1,13 @@
+[tool.ruff]
+line-length = 100
+# py313, not the py314 runtime: the 3.14 target makes ruff format drop the parentheses in
+# `except (A, B):`, a form that only 3.14 accepts and that reads like a 2.x tuple bug.
+target-version = "py313"
+extend-exclude = ["docs", "mobile-app"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "N"]
+
+[tool.ruff.lint.per-file-ignores]
+# Handler files are named after their Lambda function (PascalCase, e.g. CreateExpense.py).
+"lambda/**" = ["N999"]

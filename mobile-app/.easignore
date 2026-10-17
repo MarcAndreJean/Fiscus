@@ -1,0 +1,43 @@
+# Files EAS must not upload. EAS reads its environment from EAS secrets, not from .env.
+.env
+.env.sample
+.env*.local
+
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+.yarn/install-state.gz
+package-lock.json
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# native signing
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.pem
+
+# Metro
+.metro-health-check*
+
+# testing and builds
+/coverage
+/build
+*.tsbuildinfo
+
+# logs
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# OS and tools
+.DS_Store
+.claude/settings.local.json

@@ -1,0 +1,448 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Fiscus accounting app backend
+
+Parameters:
+  TableNamePrefix:
+    Type: String
+    Default: ""
+    Description: Prefix for every DynamoDB table name. Leave empty for production; use e.g. "test-" for a test stack.
+  BucketName:
+    Type: String
+    Default: ""
+    Description: Name of the files bucket. Leave empty to use fiscus-files-<account id>-<region>.
+
+Conditions:
+  UseDefaultBucketName: !Equals [!Ref BucketName, ""]
+
+Globals:
+  Function:
+    Runtime: python3.14
+    Architectures:
+      - arm64
+    MemorySize: 128
+    EphemeralStorage:
+      Size: 512
+    Timeout: 5
+    Layers:
+      - !Ref CommonLayer
+    Environment:
+      Variables:
+        TABLE_INCOMES: !Ref IncomesTable
+        TABLE_EXPENSES: !Ref ExpensesTable
+        TABLE_CAR_EXPENSES: !Ref CarExpensesTable
+        TABLE_HOUSE_EXPENSES: !Ref HouseExpensesTable
+        TABLE_TRAVEL_LOGS: !Ref TravelLogsTable
+        TABLE_MISC_FILES: !Ref MiscFilesTable
+        TABLE_ARCHIVE_INCOMES: !Ref ArchiveIncomesTable
+        TABLE_ARCHIVE_EXPENSES: !Ref ArchiveExpensesTable
+        TABLE_ARCHIVE_CAR_EXPENSES: !Ref ArchiveCarExpensesTable
+        TABLE_ARCHIVE_HOUSE_EXPENSES: !Ref ArchiveHouseExpensesTable
+        BUCKET_NAME: !Ref FilesBucket
+
+Resources:
+  IncomesTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Sub "${TableNamePrefix}Incomes"
+      BillingMode: PAY_PER_REQUEST
+      TableClass: STANDARD
+      DeletionProtectionEnabled: true
+      OnDemandThroughput:
+        MaxReadRequestUnits: 10
+        MaxWriteRequestUnits: 10
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: invoiceDate
+          AttributeType: S
+        - AttributeName: userId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+        - AttributeName: invoiceDate
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: userId-invoiceDate-index
+          KeySchema:
+            - AttributeName: userId
+              KeyType: HASH
+            - AttributeName: invoiceDate
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+          OnDemandThroughput:
+            MaxReadRequestUnits: 10
+            MaxWriteRequestUnits: 10
+
+  ExpensesTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Sub "${TableNamePrefix}Expenses"
+      BillingMode: PAY_PER_REQUEST
+      TableClass: STANDARD
+      DeletionProtectionEnabled: true
+      OnDemandThroughput:
+        MaxReadRequestUnits: 10
+        MaxWriteRequestUnits: 10
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: invoiceDate
+          AttributeType: S
+        - AttributeName: userId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+        - AttributeName: invoiceDate
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: userId-invoiceDate-index
+          KeySchema:
+            - AttributeName: userId
+              KeyType: HASH
+            - AttributeName: invoiceDate
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+          OnDemandThroughput:
+            MaxReadRequestUnits: 10
+            MaxWriteRequestUnits: 10
+
+  CarExpensesTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Sub "${TableNamePrefix}CarExpenses"
+      BillingMode: PAY_PER_REQUEST
+      TableClass: STANDARD
+      DeletionProtectionEnabled: true
+      OnDemandThroughput:
+        MaxReadRequestUnits: 10
+        MaxWriteRequestUnits: 10
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: invoiceDate
+          AttributeType: S
+        - AttributeName: carId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+        - AttributeName: invoiceDate
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: carId-invoiceDate-index
+          KeySchema:
+            - AttributeName: carId
+              KeyType: HASH
+            - AttributeName: invoiceDate
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+          OnDemandThroughput:
+            MaxReadRequestUnits: 10
+            MaxWriteRequestUnits: 10
+
+  HouseExpensesTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Sub "${TableNamePrefix}HouseExpenses"
+      BillingMode: PAY_PER_REQUEST
+      TableClass: STANDARD
+      DeletionProtectionEnabled: true
+      OnDemandThroughput:
+        MaxReadRequestUnits: 10
+        MaxWriteRequestUnits: 10
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: invoiceDate
+          AttributeType: S
+        - AttributeName: houseId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+        - AttributeName: invoiceDate
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: houseId-invoiceDate-index
+          KeySchema:
+            - AttributeName: houseId
+              KeyType: HASH
+            - AttributeName: invoiceDate
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+          OnDemandThroughput:
+            MaxReadRequestUnits: 10
+            MaxWriteRequestUnits: 10
+
+  TravelLogsTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Sub "${TableNamePrefix}TravelLogs"
+      BillingMode: PAY_PER_REQUEST
+      TableClass: STANDARD
+      DeletionProtectionEnabled: true
+      OnDemandThroughput:
+        MaxReadRequestUnits: 10
+        MaxWriteRequestUnits: 10
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: travelDate
+          AttributeType: S
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: invoiceDate
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+        - AttributeName: travelDate
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: userId-invoiceDate-index
+          KeySchema:
+            - AttributeName: userId
+              KeyType: HASH
+            - AttributeName: invoiceDate
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+          OnDemandThroughput:
+            MaxReadRequestUnits: 10
+            MaxWriteRequestUnits: 10
+
+  MiscFilesTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Sub "${TableNamePrefix}MiscFiles"
+      BillingMode: PAY_PER_REQUEST
+      TableClass: STANDARD
+      DeletionProtectionEnabled: true
+      OnDemandThroughput:
+        MaxReadRequestUnits: 10
+        MaxWriteRequestUnits: 10
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: date
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+        - AttributeName: date
+          KeyType: RANGE
+
+  ArchiveIncomesTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Sub "${TableNamePrefix}ArchiveIncomes"
+      BillingMode: PAY_PER_REQUEST
+      TableClass: STANDARD_INFREQUENT_ACCESS
+      DeletionProtectionEnabled: true
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: archiveDate
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+        - AttributeName: archiveDate
+          KeyType: RANGE
+
+  ArchiveExpensesTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Sub "${TableNamePrefix}ArchiveExpenses"
+      BillingMode: PAY_PER_REQUEST
+      TableClass: STANDARD_INFREQUENT_ACCESS
+      DeletionProtectionEnabled: true
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: archiveDate
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+        - AttributeName: archiveDate
+          KeyType: RANGE
+
+  ArchiveCarExpensesTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Sub "${TableNamePrefix}ArchiveCarExpenses"
+      BillingMode: PAY_PER_REQUEST
+      TableClass: STANDARD_INFREQUENT_ACCESS
+      DeletionProtectionEnabled: true
+      OnDemandThroughput:
+        MaxReadRequestUnits: 4
+        MaxWriteRequestUnits: 4
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: archiveDate
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+        - AttributeName: archiveDate
+          KeyType: RANGE
+
+  ArchiveHouseExpensesTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Sub "${TableNamePrefix}ArchiveHouseExpenses"
+      BillingMode: PAY_PER_REQUEST
+      TableClass: STANDARD_INFREQUENT_ACCESS
+      DeletionProtectionEnabled: true
+      OnDemandThroughput:
+        MaxReadRequestUnits: 1
+        MaxWriteRequestUnits: 4
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: archiveDate
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+        - AttributeName: archiveDate
+          KeyType: RANGE
+  FilesBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !If
+        - UseDefaultBucketName
+        - !Sub "fiscus-files-${AWS::AccountId}-${AWS::Region}"
+        - !Ref BucketName
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - BucketKeyEnabled: true
+            ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+            BlockedEncryptionTypes:
+              EncryptionType:
+                - SSE-C
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+
+  CommonLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      Description: shared handler helpers (fiscus package)
+      ContentUri: layers/common/
+      CompatibleRuntimes:
+        - python3.14
+      CompatibleArchitectures:
+        - arm64
+
+  OpenpyxlLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      Description: openpyxl for the report functions
+      ContentUri: layers/openpyxl/
+      CompatibleRuntimes:
+        - python3.14
+      CompatibleArchitectures:
+        - arm64
+    Metadata:
+      BuildMethod: python3.14
+
+  Api:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub "${AWS::StackName}-api"
+      StageName: prod
+      OpenApiVersion: "3.0.1"
+      EndpointConfiguration:
+        Type: REGIONAL
+      MethodSettings:
+        - ResourcePath: "/*"
+          HttpMethod: "*"
+          ThrottlingBurstLimit: 25
+          ThrottlingRateLimit: 25
+          MetricsEnabled: false
+          DataTraceEnabled: false
+      DefinitionBody:
+        Fn::Transform:
+          Name: AWS::Include
+          Parameters:
+            Location: openapi.yaml
+
+  UsagePlan:
+    Type: AWS::ApiGateway::UsagePlan
+    Properties:
+      ApiStages:
+        - ApiId: !Ref Api
+          Stage: !Ref Api.Stage
+      Throttle:
+        BurstLimit: 100
+        RateLimit: 25
+      Quota:
+        Limit: 5000
+        Period: DAY
+
+  StarterApiKey:
+    Type: AWS::ApiGateway::ApiKey
+    Properties:
+      Description: Starter API key created with the stack
+      Enabled: true
+
+  StarterUsagePlanKey:
+    Type: AWS::ApiGateway::UsagePlanKey
+    Properties:
+      KeyId: !Ref StarterApiKey
+      KeyType: API_KEY
+      UsagePlanId: !Ref UsagePlan
+
+# @@generated-functions@@
+
+Outputs:
+  ApiUrl:
+    Description: Base URL of the API (prod stage)
+    Value: !Sub "https://${Api}.execute-api.${AWS::Region}.amazonaws.com/prod"
+  StarterApiKeyId:
+    Description: ID of the starter API key (read its value with aws apigateway get-api-key --include-value)
+    Value: !Ref StarterApiKey
+  UsagePlanId:
+    Description: ID of the usage plan new API keys are attached to
+    Value: !Ref UsagePlan
+  BucketName:
+    Description: Name of the files bucket
+    Value: !Ref FilesBucket

@@ -1,0 +1,8 @@
+pytest==9.1.1
+moto[dynamodb,s3,apigateway,cloudformation]==5.2.4
+boto3==1.43.114
+cfn-lint==1.57.2
+PyYAML==6.0.3
+openpyxl==3.1.5
+ruff==0.17.1
+pre-commit==4.7.0

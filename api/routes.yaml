@@ -1,0 +1,297 @@
+# Source of openapi.yaml and of the function and permission resources in template.yaml.
+# Edit this file, then run: python scripts/gen_api.py
+#
+# routes:    path -> method -> {op, fn, query | body}. `fn` names an entry under `functions`.
+#            query: "name" is required, "name?" optional, "name:date" adds `format: date`.
+#            body:  a name under `models`. A path with no methods only answers CORS preflight.
+#            integration: extra API Gateway integration settings, merged in as given.
+# functions: CodeUri folder (under lambda/) -> function name (without "Function") -> settings.
+#            timeout (seconds), layers (extra layer resources), policies ("<kind> <resource>"
+#            where kind is crud, read, s3crud or s3read). `_defaults` applies to every function
+#            of the folder.
+# models:    request body schemas. Field types: string, number, boolean, integer, "Model[]"
+#            (array of a model) or a raw schema mapping. "+name" splices in a fragment.
+
+fragments:
+  tax:
+    subtotal: number
+    hasTps: boolean
+    hasTvq: boolean
+    tps: number
+    tvq: number
+    total: number
+  attachments:
+    images: AttachmentModel[]
+    files: AttachmentModel[]
+
+routes:
+  /incomes:
+    get: {op: GetIncomes, fn: ReadIncomes, query: [year, userId, businessId, "month?"]}
+    put: {op: PutIncome, fn: UpdateIncome, body: UpdateIncomeModel}
+    post: {op: PostIncome, fn: CreateIncome, body: CreateIncomeModel}
+    delete: {op: DeleteIncome, fn: DeleteIncome, body: DeleteIncomeModel}
+  /expenses:
+    get: {op: GetExpenses, fn: ReadExpenses, query: [year, userId, businessId, "month?"]}
+    put: {op: PutExpense, fn: UpdateExpense, body: UpdateExpenseModel}
+    post: {op: PostExpense, fn: CreateExpense, body: CreateExpenseModel}
+    delete: {op: DeleteExpense, fn: DeleteExpense, body: DeleteExpenseModel}
+  /car-expenses:
+    get: {op: GetCarExpenses, fn: ReadCarExpenses, query: [year, "month?", carId]}
+    put: {op: PutCarExpense, fn: UpdateCarExpense, body: UpdateCarExpenseModel}
+    post: {op: PostCarExpense, fn: CreateCarExpense, body: CreateCarExpenseModel}
+    delete: {op: DeleteCarExpense, fn: DeleteCarExpense, body: DeleteCarExpenseModel}
+  /house-expenses:
+    get: {op: GetHouseExpenses, fn: ReadHouseExpenses, query: [year, "month?", houseId]}
+    put: {op: PutHouseExpense, fn: UpdateHouseExpense, body: UpdateHouseExpenseModel}
+    post: {op: PostHouseExpense, fn: CreateHouseExpense, body: CreateHouseExpenseModel}
+    delete: {op: DeleteHouseExpense, fn: DeleteHouseExpense, body: DeleteHouseExpenseModel}
+  /travel-logs:
+    get: {op: GetTravelLogs, fn: ReadTravelLogs, query: [userId, year, "carId?", "businessId?", "month?"]}
+    put: {op: PutTravelLog, fn: UpdateTravelLog, body: UpdateTravelLogModel}
+    post: {op: CreateTravelLogs, fn: CreateTravelLog, body: CreateTravelLogModel}
+    delete: {op: DeleteTravelLog, fn: DeleteTravelLog, body: DeleteTravelLogModel}
+  /misc-files:
+    get: {op: GetMiscFiles, fn: ReadMiscFiles, query: [userId, year, "month?"]}
+    put: {op: PutMiscFile, fn: UpdateMiscFile, body: UpdateMiscFileModel}
+    post: {op: PostMiscFile, fn: CreateMiscFile, body: CreateMiscFileModel}
+    delete: {op: DeleteMiscFile, fn: DeleteMiscFile, body: DeleteMiscFileModel}
+  /files:
+    post: {op: PostFile, fn: CreateFile, body: CreateFileModel}
+  /files/{s3key+}:
+    get:
+      op: GetFile
+      fn: ReadFile
+      integration:
+        cacheNamespace: 1tlh1c
+        cacheKeyParameters: [method.request.path.s3key, method.request.path.s3key]
+  /report: {}
+  /report/car-expenses:
+    get: {op: GetCarExpensesReport, fn: ReportCarExpenses, query: ["toDate:date", "fromDate:date"]}
+  /report/duplicates:
+    get: {op: GetDuplicates, fn: FindDuplicates, query: ["toDate:date", "fromDate:date"]}
+  /report/expenses:
+    get: {op: GetExpensesReport, fn: ReportExpenses, query: ["toDate:date", userId, businessId, "fromDate:date"]}
+  /report/house-expenses:
+    get: {op: GetHouseExpensesReport, fn: ReportHouseExpenses, query: ["toDate:date", "fromDate:date"]}
+  /report/incomes:
+    get: {op: GetIncomesReport, fn: ReportIncomes, query: ["toDate:date", userId, businessId, "fromDate:date"]}
+  /report/misc-files:
+    get: {op: GetMiscFilesReport, fn: ReportMiscFiles, query: ["toDate:date", userId, "fromDate:date"]}
+  /report/travel-logs:
+    get: {op: GetTravelLogsReport, fn: ReportTravelLogs, query: ["toDate:date", userId, carId, businessId, "fromDate:date"]}
+
+functions:
+  incomes:
+    CreateIncome: {policies: [crud IncomesTable]}
+    DeleteIncome: {timeout: 3, policies: [crud ArchiveIncomesTable, crud IncomesTable]}
+    ReadIncomes: {timeout: 15, policies: [read IncomesTable]}
+    UpdateIncome: {policies: [crud IncomesTable]}
+  expenses:
+    CreateExpense: {policies: [crud ExpensesTable]}
+    DeleteExpense: {timeout: 3, policies: [crud ArchiveExpensesTable, crud ExpensesTable]}
+    ReadExpenses: {timeout: 15, policies: [read ExpensesTable]}
+    UpdateExpense: {policies: [crud ExpensesTable]}
+  car-expenses:
+    CreateCarExpense: {policies: [crud CarExpensesTable]}
+    DeleteCarExpense: {policies: [crud ArchiveCarExpensesTable, crud CarExpensesTable]}
+    ReadCarExpenses: {policies: [read CarExpensesTable]}
+    UpdateCarExpense: {policies: [crud CarExpensesTable]}
+  house-expenses:
+    CreateHouseExpense: {policies: [crud HouseExpensesTable]}
+    DeleteHouseExpense: {policies: [crud ArchiveHouseExpensesTable, crud HouseExpensesTable]}
+    ReadHouseExpenses: {policies: [read HouseExpensesTable]}
+    UpdateHouseExpense: {policies: [crud HouseExpensesTable]}
+  travel-logs:
+    CreateTravelLog: {policies: [crud TravelLogsTable]}
+    DeleteTravelLog: {policies: [crud TravelLogsTable]}
+    ReadTravelLogs: {policies: [read TravelLogsTable]}
+    UpdateTravelLog: {policies: [crud TravelLogsTable]}
+  misc-files:
+    CreateMiscFile: {policies: [crud MiscFilesTable]}
+    DeleteMiscFile: {policies: [crud MiscFilesTable]}
+    ReadMiscFiles: {policies: [read MiscFilesTable]}
+    UpdateMiscFile: {policies: [crud MiscFilesTable]}
+  files:
+    CreateFile: {policies: [s3crud FilesBucket]}
+    ReadFile: {timeout: 3, policies: [s3read FilesBucket]}
+  report:
+    _defaults: {timeout: 15, layers: [OpenpyxlLayer]}
+    FindDuplicates:
+      policies:
+        - read CarExpensesTable
+        - read ExpensesTable
+        - read HouseExpensesTable
+        - read IncomesTable
+        - read TravelLogsTable
+    ReportCarExpenses: {policies: [read CarExpensesTable]}
+    ReportExpenses: {policies: [read ExpensesTable]}
+    ReportHouseExpenses: {policies: [read HouseExpensesTable]}
+    ReportIncomes: {policies: [read IncomesTable]}
+    ReportMiscFiles: {policies: [read MiscFilesTable]}
+    ReportTravelLogs: {policies: [read TravelLogsTable]}
+
+models:
+  AttachmentModel:
+    s3key: string
+    fileName: string
+    size: number
+  IncomeItemModel:
+    item: string
+    +tax:
+  CreateFileModel:
+    fileContent: string
+    fileName: string
+    userId: string
+    tagId: string
+    category: string
+    year: integer
+
+  CreateIncomeModel:
+    userId: string
+    businessId: string
+    invoiceDate: string
+    clientName: string
+    description: string
+    +tax:
+    paymentMethod: string
+    notes: string
+    items: IncomeItemModel[]
+    +attachments:
+  UpdateIncomeModel:
+    id: string
+    businessId: string
+    oldInvoiceDate: string
+    invoiceDate: string
+    clientName: string
+    description: string
+    +tax:
+    paymentMethod: string
+    notes: string
+    items: IncomeItemModel[]
+    +attachments:
+  DeleteIncomeModel:
+    id: string
+    invoiceDate: string
+
+  CreateExpenseModel:
+    userId: string
+    businessId: string
+    expenseGroupId: string
+    invoiceDate: string
+    description: string
+    expenseType: string
+    dpaCategory: string
+    +tax:
+    deductiblePercentage: {type: number, minimum: 0, maximum: 100}
+    paymentMethod: string
+    notes: string
+    +attachments:
+  UpdateExpenseModel:
+    id: string
+    businessId: string
+    oldInvoiceDate: string
+    invoiceDate: string
+    description: string
+    expenseType: string
+    dpaCategory: string
+    +tax:
+    paymentMethod: string
+    deductiblePercentage: {type: number, minimum: 0, maximum: 100}
+    notes: string
+    +attachments:
+  DeleteExpenseModel:
+    id: string
+    invoiceDate: string
+
+  CreateCarExpenseModel:
+    carId: string
+    expenseGroupId: string
+    invoiceDate: string
+    description: string
+    expenseType: string
+    +tax:
+    notes: string
+    +attachments:
+  UpdateCarExpenseModel:
+    id: string
+    carId: string
+    oldInvoiceDate: string
+    invoiceDate: string
+    description: string
+    expenseType: string
+    +tax:
+    notes: string
+    +attachments:
+  DeleteCarExpenseModel:
+    id: string
+    invoiceDate: string
+
+  CreateHouseExpenseModel:
+    houseId: string
+    expenseGroupId: string
+    invoiceDate: string
+    description: string
+    expenseType: string
+    +tax:
+    notes: string
+    +attachments:
+  UpdateHouseExpenseModel:
+    id: string
+    houseId: string
+    oldInvoiceDate: string
+    invoiceDate: string
+    description: string
+    expenseType: string
+    +tax:
+    notes: string
+    +attachments:
+  DeleteHouseExpenseModel:
+    id: string
+    invoiceDate: string
+
+  CreateTravelLogModel:
+    userId: string
+    carId: string
+    businessId: string
+    travelDate: string
+    reason: string
+    notes: string
+    totalKm: number
+    consumption: number
+    +attachments:
+  UpdateTravelLogModel:
+    id: string
+    oldTravelDate: string
+    travelDate: string
+    userId: string
+    carId: string
+    businessId: string
+    reason: string
+    notes: string
+    totalKm: number
+    consumption: number
+    +attachments:
+  DeleteTravelLogModel:
+    id: string
+    travelDate: string
+
+  CreateMiscFileModel:
+    userId: string
+    date: string
+    description: string
+    category: string
+    notes: string
+    amount: number
+    +attachments:
+  UpdateMiscFileModel:
+    id: string
+    oldDate: string
+    date: string
+    description: string
+    category: string
+    notes: string
+    amount: number
+    +attachments:
+  DeleteMiscFileModel:
+    id: string
+    date: string

@@ -1,0 +1,41 @@
+name: EAS Review
+
+on:
+  workflow_dispatch:
+  # pull_request:
+  #   branches:
+  #     - main
+
+defaults:
+  run:
+    working-directory: mobile-app
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🏗 Setup repo
+        uses: actions/checkout@v4
+
+      - name: 🏗 Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: mobile-app/.nvmrc
+          cache: yarn
+          cache-dependency-path: mobile-app/yarn.lock
+
+      - name: 🏗 Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: 📦 Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: 🚀 Create preview
+        uses: expo/expo-github-action/preview@v8
+        with:
+          working-directory: mobile-app
+          # The PR's branch on pull_request, else the branch the workflow was started on.
+          command: eas update --auto --branch ${{ github.event.pull_request.head.ref || github.ref_name }}

@@ -1,0 +1,14 @@
+/api/** text eol=lf
+/scripts/** text eol=lf
+/tests/** text eol=lf
+/lambda/** text eol=lf
+/layers/** text eol=lf
+/docs/** text eol=lf
+/template.yaml text eol=lf
+/openapi.yaml text eol=lf
+/README.md text eol=lf
+/LICENSE text eol=lf
+/requirements-dev.txt text eol=lf
+/pytest.ini text eol=lf
+/.gitignore text eol=lf
+/.gitattributes text eol=lf

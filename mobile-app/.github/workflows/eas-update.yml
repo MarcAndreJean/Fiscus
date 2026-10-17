@@ -1,0 +1,37 @@
+name: EAS Update
+
+on:
+  workflow_dispatch:
+  # push:
+  #   branches:
+  #     - main
+
+defaults:
+  run:
+    working-directory: mobile-app
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🏗 Setup repo
+        uses: actions/checkout@v4
+
+      - name: 🏗 Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: mobile-app/.nvmrc
+          cache: yarn
+          cache-dependency-path: mobile-app/yarn.lock
+
+      - name: 🏗 Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: 📦 Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: 🚀 Create update
+        run: eas update --auto --non-interactive
