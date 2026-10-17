@@ -7,11 +7,17 @@ Fiscus is a personal accounting app for a small Canadian business (CRA T2125 sty
 
 It tracks incomes, expenses, car expenses, house expenses, travel logs and miscellaneous files, and can produce Excel reports.
 
+## Purpose
+
+I built Fiscus to push AWS Lambda as far as I could, and to automate as much of its upkeep as possible. The whole backend runs on Lambda, API Gateway, DynamoDB and S3. Nothing is configured by hand in the console: the API and the infrastructure are generated from a single `routes.yaml` (OpenAPI, functions, permissions and IAM policies), so adding an endpoint means editing one file and running one script. Every commit is checked by a git hook (lint, template validation, tests with mocked AWS), and a deploy is `sam build && sam deploy`.
+
+The question behind it was: how little manual work does it take to build, change and ship a complete serverless backend, and how far can the setup carry before it starts to creak? It's a personal tool with one user, so it isn't built to scale or for anyone else to run. The code is public so it can be read.
+
 ## Origin
 
 Fiscus started as a playground to mess with AWS, Lambda functions, API Gateway, DynamoDB and Expo for a mobile app. It was first built during a three-day personal hackathon, and it became a full project from there.
 
-It was originally named Abode, an IoT personal assistant I created to do a bunch of things around my house using AWS. Later I extracted the accounting code from it into Fiscus, so it could be open source.
+It was originally named Abode, a home-automation assistant I created to do a bunch of things around my house using AWS. Later I extracted the accounting code from it into Fiscus, so it could be open source.
 
 ## Why it is built this way
 
@@ -157,6 +163,16 @@ python scripts/gen_api.py --check   # fails if they are out of date
 - `lambda/<area>/<Handler>.py`: one file per Lambda function. A handler validates its input, reads or writes DynamoDB/S3 and returns `ok(...)`. Each handler reads its own table names from `os.environ["TABLE_..."]`; the template tests derive every function's IAM policies from those reads, so keep them in the handler file.
 - `layers/common/python/fiscus/`: shared code, deployed as `CommonLayer` and attached to every function. `api` (responses and error handling), `validation` (required fields, numbers), `dynamo` (paginated scans, 404 lookups, atomic date moves, archive + delete), `dates`, `money`, and `xlsx` (report sheets; report functions only).
 - `layers/openpyxl/`: the `openpyxl` dependency of the report functions.
+
+### Data model
+
+DynamoDB only declares keys, so there is no single schema file. The pieces live in three places:
+
+- **Tables** (names, partition/sort keys, indexes): `api/template.base.yaml`. Incomes, expenses, car expenses, house expenses and travel logs use `id` + a date as key, with a `userId` index where the lists need it; the archive tables hold deleted records.
+- **Request bodies** (the fields each create/update call accepts): `models` in `api/routes.yaml`, which also generates the OpenAPI schemas.
+- **Stored records**: built field by field in each handler (`lambda/<area>/Create*.py`), with `fiscus.validation` and `fiscus.money` checking the values. The app's matching TypeScript types are in `mobile-app/lib/types/`.
+
+Keeping these in sync by hand is a known limit of the design; the tests in `tests/` check the template and the OpenAPI document, not the record shape.
 
 ### Error convention
 
