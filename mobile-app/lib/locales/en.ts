@@ -323,6 +323,11 @@ Not claimable:\n\
   // Reports page
   reportsFromDate: 'From Date',
   reportsToDate: 'To Date',
+  reportsPeriodQuarter: 'Quarter',
+  reportsPeriodCustom: 'Custom',
+  reportsQuarter: 'Q{{quarter}}',
+  reportsPreviousYear: 'Previous year',
+  reportsNextYear: 'Next year',
   reportsSelectDates: 'Please select from and to dates',
   reportsDownloadSuccess: 'Report downloaded successfully',
   reportsDownloadError: 'Failed to download report',

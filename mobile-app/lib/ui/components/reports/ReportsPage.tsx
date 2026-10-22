@@ -2,8 +2,8 @@ import { format } from 'date-fns'
 import React, { useState } from 'react'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { Button, Divider, Snackbar, Surface, Text } from 'react-native-paper'
-import { DatePickerInput } from 'react-native-paper-dates'
 
+import ReportPeriodPicker from './ReportPeriodPicker'
 import { useDownloadReport } from '../../../api'
 import { Locales } from '../../../locales'
 import { useAuth } from '../../../settings'
@@ -109,26 +109,12 @@ const ReportsPage = () => {
 
   return (
     <>
-      <View style={style.header}>
-        <DatePickerInput
-          locale="en"
-          label={Locales.t('reportsFromDate')}
-          value={fromDate}
-          onChange={setFromDate}
-          inputMode="start"
-          mode="outlined"
-          style={style.dateInput}
-        />
-        <DatePickerInput
-          locale="en"
-          label={Locales.t('reportsToDate')}
-          value={toDate}
-          onChange={setToDate}
-          inputMode="end"
-          mode="outlined"
-          style={style.dateInput}
-        />
-      </View>
+      <ReportPeriodPicker
+        fromDate={fromDate}
+        toDate={toDate}
+        onFromDateChange={setFromDate}
+        onToDateChange={setToDate}
+      />
 
       <ScrollView style={style.container}>
         {travelLogCombinations.length > 0 && (
@@ -233,17 +219,6 @@ const ReportsPage = () => {
 }
 
 const style = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    marginBottom: 16,
-    padding: 8,
-    gap: 8,
-  },
-  dateInput: {
-    flex: 1,
-  },
   container: {
     flex: 1,
     width: '100%',
